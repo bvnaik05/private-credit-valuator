@@ -1,0 +1,21 @@
+# Virtual environment
+venv/
+
+# Data files (too large for GitHub)
+data/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Environment variables (Snowflake credentials - NEVER commit this)
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+Thumbs.db
+
+# Outputs
+outputs/
