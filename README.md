@@ -37,21 +37,24 @@ Houlihan Lokey's FVA division perform every quarter:
 
 ## Project structure
 
-hl-credit-risk/
-├── data/ ← raw data (not committed, see .gitignore)
+private-credit-valuator/
+├── data/                          ← raw data (not committed)
 ├── notebooks/
-│ ├── 01_eda.ipynb ← exploratory analysis
-│ ├── 02_feature_engineering.ipynb
-│ ├── 03_model_training.ipynb
-│ └── 04_fair_value.ipynb
+│   └── 01_eda.ipynb               ← exploratory data analysis
 ├── src/
-│ ├── snowflake_connect.py ← Snowflake connector
-│ ├── features.py ← feature engineering functions
-│ ├── model.py ← training pipeline
-│ └── valuation.py ← DCF and stress test logic
+│   ├── snowflake_connect.py       ← Snowflake connection manager
+│   ├── load_to_snowflake.py       ← data ingestion pipeline
+│   ├── setup_schema.py            ← database schema setup
+│   ├── phase1_report.py           ← data validation & EDA report
+│   ├── phase2_feature_engineering.py  ← feature engineering & ML prep
+│   ├── phase3_xgboost_model.py    ← XGBoost PD model training
+│   └── phase4_fair_value_engine.py    ← DCF valuation & stress testing
 ├── snowflake/
-│ └── schema.sql ← table definitions
-├── outputs/ ← model results, Excel exports
+│   └── schema.sql                 ← table definitions
+├── outputs/
+│   └── plots/                     ← ROC curve, SHAP, confusion matrix
+├── powerbi/
+│   └── Private_Credit_Valuation.pbix  ← Power BI dashboard
 └── requirements.txt
 
 ---
@@ -73,6 +76,8 @@ hl-credit-risk/
 | Portfolio Avg PD | 45.22% |
 | Portfolio Avg LGD | 46.28% |
 
+![Dashboard Overview](outputs/powerbi_image.png)
+
 ---
 
 ## Domain context
@@ -85,6 +90,10 @@ valuation:
 - **DCF (Discounted Cash Flow)** — present value of future loan payments
 - **ASC 820** — US accounting standard requiring fair value reporting
   for fund portfolios (what HL's clients must comply with every quarter)
+
+> **Note on Portfolio Avg PD:** The 45% avg PD reflects the test set composition
+> (2016–2018 vintage loans with elevated default rates post-peak cycle).
+> A production implementation would sample across vintages for a representative portfolio.
 
 ---
 
