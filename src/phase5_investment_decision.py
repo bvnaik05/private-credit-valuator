@@ -10,7 +10,9 @@ from datetime import datetime
 # CONFIGURATION
 # ==============================================================================
 
-FRED_API_KEY = os.getenv('FRED_API_KEY', 'demo')  # We'll add this to .env
+from dotenv import load_dotenv
+load_dotenv()
+FRED_API_KEY = os.getenv('FRED_API_KEY', 'demo')
 
 # Investment decision thresholds
 THRESHOLDS = {
