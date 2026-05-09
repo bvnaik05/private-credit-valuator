@@ -19,6 +19,6 @@ Thumbs.db
 
 # Outputs (allow plots, ignore CSVs)
 outputs/**/*.csv
-outputs/**/*.txt
+outputs/**/*.xlsx
 outputs/plots/*.png
 !outputs/plots/*.png
