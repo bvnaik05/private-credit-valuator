@@ -109,28 +109,37 @@ def calculate_expected_loss(pd_prob, lgd, loan_amount):
 
 def simple_fair_value(loan_amnt, int_rate, pd_prob, lgd, term_months):
     """
-    Simplified Fair Value = Par Value × (1 - PD × LGD) + Interest Premium
+    Risk-Adjusted Fair Value Calculation
     
-    This model avoids DCF complexity and prevents NaN/complex numbers
+    FV = Expected Principal Recovery + Risk-Adjusted Interest Income
+    
+    This avoids double-counting by adjusting BOTH principal and interest
+    for default probability.
     """
     # Cap values to reasonable ranges
     pd_prob = np.clip(pd_prob, 0.0, 0.99)
     lgd = np.clip(lgd, 0.0, 0.95)
     
-    # Expected recovery
-    expected_loss_pct = pd_prob * lgd
-    recovery_pct = 1.0 - expected_loss_pct
-    recovery_value = loan_amnt * recovery_pct
+    # Expected survival probability (borrower keeps paying)
+    survival_prob = 1.0 - pd_prob
     
-    # Interest premium (assume 36-month average holding period for illiquid loan)
+    # Risk-adjusted principal recovery
+    # = Par + (survival × par) - (default × par × loss%)
+    # Simplified: par × (survival + default × (1-loss%))
+    principal_recovery = loan_amnt * (survival_prob + pd_prob * (1 - lgd))
+    
+    # Risk-adjusted interest income (only received if borrower survives full term)
+    # Expected holding period (up to 36 months for illiquid private credit)
     expected_holding_months = min(term_months, 36)
-    monthly_interest_rate = int_rate / 100 / 12
-    interest_premium = loan_amnt * (monthly_interest_rate * expected_holding_months)
+    monthly_rate = int_rate / 100 / 12
+    # Interest only accrues if borrower survives
+    interest_income = loan_amnt * monthly_rate * expected_holding_months * survival_prob
     
-    # Fair value
-    fair_value = recovery_value + interest_premium
+    # Total fair value
+    fair_value = principal_recovery + interest_income
     
-    return max(fair_value, loan_amnt * 0.3)  # Floor at 30% of par
+    # Risk floor: minimum 30% of par (distressed valuation floor)
+    return max(fair_value, loan_amnt * 0.30)
 
 def build_portfolio_analytics():
     """Build portfolio analytics dataset"""

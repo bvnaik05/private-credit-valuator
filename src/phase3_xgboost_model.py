@@ -219,6 +219,63 @@ def train_xgboost_model():
     print(f"   ✓ Confusion matrix saved: outputs/plots/confusion_matrix_{timestamp}.png")
     plt.close()
     
+    # 5. SHAP Explainability Analysis
+    print("\n[5/5] GENERATING SHAP EXPLAINABILITY PLOTS...")
+    try:
+        import shap
+        
+        # Create SHAP explainer (TreeExplainer for XGBoost)
+        explainer = shap.TreeExplainer(model)
+        
+        # Use sample of 500 for speed (SHAP calculations can be intensive)
+        sample_size = min(500, X_test.shape[0])
+        shap_sample_indices = np.random.choice(X_test.shape[0], size=sample_size, replace=False)
+        X_sample = X_test[shap_sample_indices]
+        
+        print(f"   Computing SHAP values for {sample_size} test samples...")
+        shap_values = explainer.shap_values(X_sample)
+        
+        # SHAP Summary Plot (shows feature importance via SHAP)
+        plt.figure(figsize=(12, 8))
+        shap.summary_plot(
+            shap_values,
+            X_sample,
+            feature_names=feature_names,
+            show=False,
+            max_display=15,
+            plot_type='bar'
+        )
+        plt.tight_layout()
+        plt.savefig(f'outputs/plots/shap_summary_{timestamp}.png', dpi=300, bbox_inches='tight')
+        print(f"   ✓ SHAP summary plot saved: outputs/plots/shap_summary_{timestamp}.png")
+        plt.close()
+        
+        # SHAP Dependence Plot (relationship between feature and prediction)
+        # Show for top 3 features
+        top_features = feature_importance_df.head(3)['feature'].values
+        
+        for feature in top_features:
+            if feature in feature_names:
+                feature_idx = feature_names.index(feature)
+                plt.figure()
+                shap.dependence_plot(
+                    feature_idx,
+                    shap_values,
+                    X_sample,
+                    feature_names=feature_names,
+                    show=False
+                )
+                plt.tight_layout()
+                plt.savefig(f'outputs/plots/shap_dependence_{feature}_{timestamp}.png', dpi=300, bbox_inches='tight')
+                plt.close()
+        
+        print(f"   ✓ SHAP dependence plots generated for top 3 features")
+        
+    except ImportError:
+        print("   ⚠️  SHAP not installed. Install with: pip install shap")
+    except Exception as e:
+        print(f"   ⚠️  SHAP calculation failed: {str(e)}")
+    
     # ==============================================================================
     # Summary Report
     # ==============================================================================

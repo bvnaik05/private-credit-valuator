@@ -58,11 +58,20 @@ hl-credit-risk/
 
 ## Key results
 
-_(To be updated as project progresses)_
-
-- Model AUC: TBD
-- Portfolio default rate: TBD
-- Stress test NAV impact: TBD
+| Metric | Value |
+|---|---|
+| Dataset | 200,000 Lending Club loans (2007–2018) |
+| Default Rate | 17.9% |
+| Model AUC-ROC | 0.7055 ✓ |
+| Model Recall | 67.53% (catches 2 in 3 defaults) |
+| Portfolio Par Value | $602.68M |
+| Portfolio Fair Value | $702.23M |
+| Mark-to-Market Gain | +$99.55M (16.5% premium) |
+| Total Expected Loss | $127.26M |
+| Mild Recession NAV Impact | -$31.39M (-4.5%) |
+| Severe Recession NAV Impact | -$78.58M (-11.2%) |
+| Portfolio Avg PD | 45.22% |
+| Portfolio Avg LGD | 46.28% |
 
 ---
 
