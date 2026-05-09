@@ -1,0 +1,28 @@
+
+MODEL PERFORMANCE SUMMARY
+========================
+
+Dataset:
+  • Training samples: 159,998
+  • Test samples: 40,000
+  • Total features: 17
+
+Model: XGBoost Classifier
+  • Max depth: 6
+  • Learning rate: 0.05
+  • Estimators: 200
+
+Performance Metrics (Test Set):
+  • AUC-ROC: 0.7055
+  • Precision: 0.2829
+  • Recall: 0.6753
+  • F1-Score: 0.3987
+
+Feature Importance:
+  • Most important feature: high_int_rate
+  • Top feature importance: 0.6406
+
+Output Files:
+  • Model: models/xgboost_pd_model_20260509_184635.pkl
+  • Predictions: data/processed/test_predictions_20260509_184635.csv
+  • Feature importance: models/feature_importance_20260509_184635.csv
