@@ -148,6 +148,13 @@ def make_verdict(
     return {"verdict":"HOLD","confidence":"Medium",
             "reason":f"Positive RAY {ray:.1f}% but moderate risk profile"}
 
+    def to_python(obj):
+        """Convert numpy types to native Python for JSON serialization"""
+        import numpy as np
+        if isinstance(obj, (np.integer,)):  return int(obj)
+        if isinstance(obj, (np.floating,)): return float(obj)
+        if isinstance(obj, (np.ndarray,)):  return obj.tolist()
+        return obj
 
 def score_loan_features(
     loan_amnt, int_rate, grade, annual_inc,
@@ -326,17 +333,18 @@ async def analyse_portfolio(file: UploadFile = File(...)):
             v    = make_verdict(pd_prob, lgd, ray, exc, r["grade"])
 
             rows.append({
-                "loan_amnt":    r["loan_amnt"],
-                "int_rate":     r["int_rate"],
-                "grade":        r["grade"],
-                "pd_prob":      round(pd_prob, 4),
-                "lgd":          round(lgd, 4),
-                "fair_value":   round(fv, 2),
-                "expected_loss":round(el, 2),
-                "ray":          ray,
-                "verdict":      v["verdict"],
+                "loan_amnt":     float(r["loan_amnt"]),
+                "int_rate":      float(r["int_rate"]),
+                "grade":         str(r["grade"]),
+                "pd_prob":       round(float(pd_prob), 4),
+                "lgd":           round(float(lgd), 4),
+                "fair_value":    round(float(fv), 2),
+                "expected_loss": round(float(el), 2),
+                "ray":           round(float(ray), 4),
+                "verdict":       str(v["verdict"]),
             })
-        except Exception:
+        except Exception as e:
+            print(f"Row failed: {e}")
             continue
 
     if not rows:
@@ -353,26 +361,34 @@ async def analyse_portfolio(file: UploadFile = File(...)):
         avg_ray=("ray","mean"),
         total_fv=("fair_value","sum"),
         total_el=("expected_loss","sum"),
-    ).round(4).reset_index().to_dict(orient="records")
+    ).round(4).reset_index()
+
+# Convert all numpy types to native Python for JSON serialization
+    grade_summary = grade_summary.astype(object)
+    grade_summary = grade_summary.to_dict(orient="records")
+    grade_summary = [
+        {k: int(v) if hasattr(v, 'item') else v for k, v in row.items()}
+        for row in grade_summary
+    ]
 
     return {
-        "summary": {
-            "total_loans":   total,
-            "total_par":     round(result_df["loan_amnt"].sum(), 2),
-            "total_fv":      round(result_df["fair_value"].sum(), 2),
-            "total_el":      round(result_df["expected_loss"].sum(), 2),
-            "avg_pd":        round(result_df["pd_prob"].mean(), 4),
-            "avg_ray":       round(result_df["ray"].mean(), 4),
-            "buy_count":     counts.get("BUY",   0),
-            "hold_count":    counts.get("HOLD",  0),
-            "avoid_count":   counts.get("AVOID", 0),
-            "buy_pct":       round(counts.get("BUY",0)/total*100, 1),
-            "avoid_pct":     round(counts.get("AVOID",0)/total*100, 1),
-        },
-        "grade_breakdown": grade_summary,
-        "market":          market,
-        "loans":           rows,
-    }
+    "summary": {
+        "total_loans":   int(total),
+        "total_par":     round(float(result_df["loan_amnt"].sum()), 2),
+        "total_fv":      round(float(result_df["fair_value"].sum()), 2),
+        "total_el":      round(float(result_df["expected_loss"].sum()), 2),
+        "avg_pd":        round(float(result_df["pd_prob"].mean()), 4),
+        "avg_ray":       round(float(result_df["ray"].mean()), 4),
+        "buy_count":     int(counts.get("BUY",   0)),
+        "hold_count":    int(counts.get("HOLD",  0)),
+        "avoid_count":   int(counts.get("AVOID", 0)),
+        "buy_pct":       round(float(counts.get("BUY",0)/total*100), 1),
+        "avoid_pct":     round(float(counts.get("AVOID",0)/total*100), 1),
+    },
+    "grade_breakdown": grade_summary,
+    "market":          market,
+    "loans":           rows,
+}
 
 
 @app.get("/api/decide")
